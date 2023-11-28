@@ -3,7 +3,7 @@ import streamlit as st
 import xlsxwriter
 from io import BytesIO
 
-# Your existing data cleaning function
+# Data cleaning function
 def clean_data(df):
     # Clean the date column
     df['DATE'] = df['DATE'].astype(str)
@@ -14,9 +14,23 @@ def clean_data(df):
     df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
     # Convert 'Date_final' to datetime with error handling
     df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
 
     # Add departure/arrival label
     df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
 
     # Create function to return AC Code
     def get_ac_code(airline):
@@ -53,6 +67,7 @@ def clean_and_export_excel(df, unique_code):
     # Write each dataframe to a different sheet and create a simplified pivot table
     for airline in unique_code:
         df_airline = df[df['AC CODE'] == airline]
+
 
         # Write the original dataframe to the sheet
         df_airline.to_excel(excel_writer, sheet_name=airline, index=False)
