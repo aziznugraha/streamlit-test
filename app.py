@@ -4,7 +4,7 @@ import xlsxwriter
 from io import BytesIO
 
 # Data cleaning function
-def clean_data(df):
+def clean_data_cgk(df):
     # Clean the date column
     df['DATE'] = df['DATE'].astype(str)
     df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
@@ -52,6 +52,230 @@ def clean_data(df):
 
     return df
 
+def clean_data_dps(df):
+    # Clean the date column
+    df['DATE'] = df['DATE'].astype(str)
+    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+    # Convert 'Date_final' to datetime with error handling
+    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    def get_ac_code(airline, type):
+        print(f"Checking airline: {airline}")
+        if 'CX - CATHAY PACIFIC' in airline and "A333" in type:
+            print("Matched CX-WB condition")
+            return "CX-WB"
+        if 'CX - CATHAY PACIFIC' in airline and "A321" in type:
+            print("Matched CX-NB condition")
+            return "CX-NB"
+        if 'SQ - SINGAPORE AIRLINES' in airline and "B787-1000" in type:
+            print("Matched SQ-WB condition")
+            return "SQ-WB"
+        if 'SQ - SINGAPORE AIRLINES' in airline and "B738MAX" in type:
+            print("MAtched SQ-NB condition")
+            return "SQ-NB"
+        else:
+            print("Did not match CX-WB condition")
+            return airline[:2]
+
+
+    # Trigger the function
+    df['AC CODE'] = [get_ac_code(x, y) for x, y in zip(df['AIRLINES'], df['AC TYPE'])]
+
+    return df
+
+def clean_data_hlp(df):
+    # Clean the date column
+    df['DATE'] = df['DATE'].astype(str)
+    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+    # Convert 'Date_final' to datetime with error handling
+    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    # Get AC Code
+    df['AC CODE'] = df['AIRLINES'].str[:2]
+
+    return df
+
+def clean_data_kjt(df):
+    # Clean the date column
+    df['DATE'] = df['DATE'].astype(str)
+    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+    # Convert 'Date_final' to datetime with error handling
+    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    # Get AC Code
+    df['AC CODE'] = df['AIRLINES'].str[:2]
+
+    return df
+
+def clean_data_kno(df):
+    # Clean the date column
+    df['DATE'] = df['DATE'].astype(str)
+    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+    # Convert 'Date_final' to datetime with error handling
+    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    # Create function to return AC Code
+    def get_ac_code(airline):
+        if airline == 'QZ - AIR ASIA INDONESIA (DOMESTIC)':
+            return 'QZ-DOM'
+        elif airline == 'QZ - AIR ASIA INDONESIA (INTERNATIONAL)':
+            return 'QZ-INT'
+        elif airline == 'CX - CATHAY PACIFIC FREIGHTER':
+            return 'CX-FREIGHTER'
+        elif airline == '2Y - MY INDO (DOM) - PREMIER':
+            return '2Y-DOM'
+        elif airline == '2Y - MY INDO (INTL) - PREMIER':
+            return '2Y-INT'
+        else:
+            return airline[:2]  # Default: Take the first two characters
+
+    # Trigger the function
+    df['AC CODE'] = df['AIRLINES'].apply(get_ac_code)
+
+    return df
+
+def clean_data_sub(df):
+    # Clean the date column
+    df['DATE'] = df['DATE'].astype(str)
+    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+    # Convert 'Date_final' to datetime with error handling
+    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    def get_ac_code(airline, type):
+        print(f"Checking airline: {airline}")
+        if 'CX - CATHAY PACIFIC' in airline and "A333" in type:
+            print("Matched CX-WB condition")
+            return "CX-WB"
+        if 'CX - CATHAY PACIFIC' in airline and "A321" in type:
+            print("Matched CX-NB condition")
+            return "CX-NB"
+        if 'SQ - SINGAPORE AIRLINES' in airline and "A359" in type:
+            print("Matched SQ-WB condition")
+            return "SQ-WB"
+        if 'SQ - SINGAPORE AIRLINES' in airline and "B738MAX" in type:
+            print("MAtched SQ-NB condition")
+            return "SQ-NB"
+        if '2Y - MY INDO (INTL) - PREMIER' in airline:
+            return "2Y-INT-NB"
+        if '2Y - MY INDO (DOM) - PREMIER' in airline:
+            return "2Y-DOM-NB"
+        else:
+            print("Did not match CX-WB condition")
+            return airline[:2]
+
+
+    # Trigger the function
+    df['AC CODE'] = [get_ac_code(x, y) for x, y in zip(df['AIRLINES'], df['AC TYPE'])]
+
+    return df
+
+    
+
 def clean_and_export_excel(df, unique_code):
     # Use BytesIO to store the Excel file in memory
     excel_buffer = BytesIO()
@@ -89,7 +313,6 @@ def clean_and_export_excel(df, unique_code):
 
     return excel_buffer
 
-# Streamlit app
 def main():
     st.title("JABS DATA CLEANING AND PROCESSING")
 
@@ -100,12 +323,33 @@ def main():
         st.sidebar.info("File uploaded successfully!")
 
         # Importing the data
-        df = pd.read_excel(uploaded_file)
+        try:
+            df = pd.read_excel(uploaded_file)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            return
 
-        # Perform data cleaning
-        df_cleaned = clean_data(df)
+        # Choose data cleaning option
+        data_cleaning_option = st.selectbox("Select Station", ["CGK", "DPS", "HLP", "KJT", "KNO", "SUB"])
 
-        # Create list for unique AC Code --> To be a name of df
+        # Perform selected data cleaning
+        if data_cleaning_option == "CGK":
+            df_cleaned = clean_data_cgk(df)
+        elif data_cleaning_option == "DPS":
+            df_cleaned = clean_data_dps(df)
+        elif data_cleaning_option == "HLP":
+            df_cleaned = clean_data_hlp(df)
+        elif data_cleaning_option == "KJT":
+            df_cleaned = clean_data_kjt(df)
+        elif data_cleaning_option == "KNO":
+            df_cleaned = clean_data_kno(df)
+        elif data_cleaning_option == "SUB":
+            df_cleaned = clean_data_sub(df)
+        else:
+            st.warning("Please select a valid data cleaning option.")
+            return
+
+        # Create list for unique AC Code --> To be a name of sheet
         unique_code = df_cleaned['AC CODE'].unique()
 
         # Display some information about the cleaned data
@@ -117,11 +361,11 @@ def main():
             output_file = clean_and_export_excel(df_cleaned, unique_code)
             st.sidebar.success(f"Data cleaned and Excel exported successfully! [Download Link](./{output_file})")
 
-            #Add download button
+            # Add download button
             st.download_button(
                 label="Download Excel File",
                 data=output_file,
-                file_name="output_file.xlsx",
+                file_name="cleaned_data.xlsx",  # Update file name for consistency
                 key="Download_button"
             )
 
