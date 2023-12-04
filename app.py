@@ -5,63 +5,72 @@ from io import BytesIO
 
 # Data cleaning function
 def clean_data_cgk(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
-    # Add total pax
-    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
-    # Reorder desired column that will shown in Excel
-    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+        if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+        else:
+            df['Date_final'] = df['DATE']
+   
+     # Add total pax
+        df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+        # Reorder desired column that will shown in Excel
+        column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
                      'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
                     'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
                      'Pcs', 'STA', 'ATA', 'STD', 'ATD']
-    df = df[column_orders]
+        df = df[column_orders]
 
 
-    # Add departure/arrival label
-    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+        # Add departure/arrival label
+        df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
 
-    # Sort by arr/dep and date
-    df = df.sort_values(by=['arr/dep', 'Date_final'])
+        # Sort by arr/dep and date
+        df = df.sort_values(by=['arr/dep', 'Date_final'])
 
 
-    # Create function to return AC Code
-    def get_ac_code(airline):
-        if airline == 'QZ - AIR ASIA INDONESIA (DOMESTIC)':
-            return 'QZ-DOM'
-        elif airline == 'QZ - AIR ASIA INDONESIA (INTERNATIONAL)':
-            return 'QZ-INT'
-        elif airline == 'CX - CATHAY PACIFIC FREIGHTER':
-            return 'CX-FREIGHTER'
-        elif airline == '2Y - MY INDO (DOM) - PREMIER':
-            return '2Y-DOM'
-        elif airline == '2Y - MY INDO (INTL) - PREMIER':
-            return '2Y-INT'
-        else:
-            return airline[:2]  # Default: Take the first two characters
+        # Create function to return AC Code
+        def get_ac_code(airline):
+            if airline == 'QZ - AIR ASIA INDONESIA (DOMESTIC)':
+                return 'QZ-DOM'
+            elif airline == 'QZ - AIR ASIA INDONESIA (INTERNATIONAL)':
+                return 'QZ-INT'
+            elif airline == 'CX - CATHAY PACIFIC FREIGHTER':
+                return 'CX-FREIGHTER'
+            elif airline == '2Y - MY INDO (DOM) - PREMIER':
+                return '2Y-DOM'
+            elif airline == '2Y - MY INDO (INTL) - PREMIER':
+                return '2Y-INT'
+            else:
+                return airline[:2]  # Default: Take the first two characters
 
-    # Trigger the function
-    df['AC CODE'] = df['AIRLINES'].apply(get_ac_code)
-
-    return df
+        # Trigger the function
+        df['AC CODE'] = df['AIRLINES'].apply(get_ac_code)
+        return df
 
 def clean_data_dps(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = pd.to_datetime(df['DATE'])
+   
+
     # Add total pax
     df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
@@ -105,15 +114,21 @@ def clean_data_dps(df):
     return df
 
 def clean_data_hlp(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    
+        #Clean date column
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = pd.to_datetime(df['DATE'])
+    
     # Add total pax
     df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
@@ -138,15 +153,22 @@ def clean_data_hlp(df):
     return df
 
 def clean_data_kjt(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    
+    #clean date column
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = df['DATE']
+
+
     # Add total pax
     df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
@@ -171,15 +193,24 @@ def clean_data_kjt(df):
     return df
 
 def clean_data_kno(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    
+        #clean date column
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = df['DATE']
+
+
+
+
     # Add total pax
     df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
@@ -219,15 +250,21 @@ def clean_data_kno(df):
     return df
 
 def clean_data_sub(df):
-    # Clean the date column
-    df['DATE'] = df['DATE'].astype(str)
-    df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
-    df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
-    df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
-    df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
-    df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
-    # Convert 'Date_final' to datetime with error handling
-    df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    
+        #clean date column
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = df['DATE']
+
     # Add total pax
     df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
 
@@ -318,6 +355,9 @@ def main():
 
     # File uploader
     uploaded_file = st.file_uploader("Upload an Excel file", type=["xls", "xlsx"])
+
+
+    
 
     if uploaded_file is not None:
         st.sidebar.info("File uploaded successfully!")
