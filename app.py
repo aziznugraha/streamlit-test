@@ -103,6 +103,10 @@ def clean_data_dps(df):
         if 'SQ - SINGAPORE AIRLINES' in airline and "B738MAX" in type:
             print("MAtched SQ-NB condition")
             return "SQ-NB"
+        if 'JQ - JET STAR AIRWAYS (A320)' in airline:
+            return 'JQ-NB'
+        if 'JQ - JET STAR AIRWAYS (B788)' in airline:
+            return 'JQ-WB'  
         if  airline == 'QZ - AIR ASIA INDONESIA (DOMESTIC)':
             return "QZ-DOM " 
         if airline == 'QZ - AIR ASIA INDONESIA (INTERNATIONAL)':
