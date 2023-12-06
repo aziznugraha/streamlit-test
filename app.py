@@ -88,7 +88,7 @@ def clean_data_dps(df):
     # Sort by arr/dep and date
     df = df.sort_values(by=['arr/dep', 'Date_final'])
 
-
+    # Create function to get AC Code based on AC Type
     def get_ac_code(airline, type):
         print(f"Checking airline: {airline}")
         if 'CX - CATHAY PACIFIC' in airline and "A333" in type:
@@ -103,14 +103,18 @@ def clean_data_dps(df):
         if 'SQ - SINGAPORE AIRLINES' in airline and "B738MAX" in type:
             print("MAtched SQ-NB condition")
             return "SQ-NB"
+        if  airline == 'QZ - AIR ASIA INDONESIA (DOMESTIC)':
+            return "QZ-DOM " 
+        if airline == 'QZ - AIR ASIA INDONESIA (INTERNATIONAL)':
+            return "QZ-INT"
         else:
-            print("Did not match CX-WB condition")
+            print("Did not match get AC CODE condition")
             return airline[:2]
 
-
-    # Trigger the function
+    # Trigger the function to get AC Code based on AC Type
     df['AC CODE'] = [get_ac_code(x, y) for x, y in zip(df['AIRLINES'], df['AC TYPE'])]
 
+         
     return df
 
 def clean_data_hlp(df):
