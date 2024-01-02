@@ -324,6 +324,53 @@ def clean_data_sub(df):
     return df
 
     
+def clean_data_yia(df):
+    if df['DATE'].dtype == 'O':  # 'O' is the code for object type
+        # Clean the date column
+            df['DATE'] = df['DATE'].astype(str)
+            df['Year'] = df['DATE'].apply(lambda x: x[:4] if '00:00:00' in x else x[-4:])
+            df['Month'] = df.apply(lambda row: row['DATE'][8:10] if '00:00:00' in row['DATE'] else row['DATE'][3:5], axis=1)
+            df['Day'] = df.apply(lambda row: row['DATE'][5:7] if '00:00:00' in row['DATE'] else row['DATE'][:2], axis=1)
+            df['Date_final'] = pd.to_datetime(df[['Year', 'Month', 'Day']], errors='coerce')
+            df['Date_final'] = pd.to_datetime(df['Date_final']).dt.strftime('%Y-%m-%d')
+            # Convert 'Date_final' to datetime with error handling
+            df['Date_final'] = pd.to_datetime(df['Date_final'], errors='coerce')
+    else:
+            df['Date_final'] = df['DATE']
+   
+     # Add total pax
+    df['PAX'] = df['F.A']+df['F.C']+df['F.I']+df['B.A']+df['B.C']+df['B.I']+df['E.A']+df['E.C']+df['E.I']
+
+    # Reorder desired column that will shown in Excel
+    column_orders = ['No', 'AIRLINES', 'FLIGHT NO', 'Date_final', 'AC REG', 'AC TYPE', 'STRETCH',
+                     'F.A', 'F.I', 'F.C', 'B.A', 'B.I', 'B.C',
+                    'E.A', 'E.I', 'E.C', 'PAX', 'CARGO', 'MAIL', 'ULD', 'Kgs',
+                     'Pcs', 'STA', 'ATA', 'STD', 'ATD']
+    df = df[column_orders]
+
+
+    # Add departure/arrival label
+    df['arr/dep'] = df['STA'].apply(lambda x: "Departure" if x == "**" else "Arrival")
+
+    # Sort by arr/dep and date
+    df = df.sort_values(by=['arr/dep', 'Date_final'])
+
+
+    # Create function to return AC Code
+    def get_ac_code(airline):
+        if 'SIN' in airline['STRETCH'] and airline['AIRLINES'].startswith('QZ'):
+             return 'QZ-INT'
+        else:
+             return airline['AIRLINES'][:2]
+
+    # Trigger the function
+    df['AC CODE'] = df.apply(get_ac_code, axis=1)
+    return df
+
+
+     
+
+
 
 def clean_and_export_excel(df, unique_code):
     # Use BytesIO to store the Excel file in memory
@@ -382,7 +429,7 @@ def main():
             return
 
         # Choose data cleaning option
-        data_cleaning_option = st.selectbox("Select Station", ["CGK", "DPS", "HLP", "KJT", "KNO", "SUB"])
+        data_cleaning_option = st.selectbox("Select Station", ["CGK", "DPS", "HLP", "KJT", "KNO", "SUB", "YIA"])
 
         # Perform selected data cleaning
         if data_cleaning_option == "CGK":
@@ -397,6 +444,8 @@ def main():
             df_cleaned = clean_data_kno(df)
         elif data_cleaning_option == "SUB":
             df_cleaned = clean_data_sub(df)
+        elif data_cleaning_option == "YIA":
+             df_cleaned = clean_data_yia(df)
         else:
             st.warning("Please select a valid data cleaning option.")
             return
